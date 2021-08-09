@@ -28,39 +28,57 @@ else:
 
 line = [
     [
-        Sg.Text("Output directory"),
-        Sg.In(size=(25, 1), enable_events=True, key="-OUTPUT-", default_text=Path(output).absolute()),
+        Sg.Text("Output directory", size=(25, 1), justification="left"),
+        Sg.In(
+            size=(25, 1),
+            enable_events=True,
+            key="-OUTPUT-",
+            default_text=Path(output).absolute(),
+            justification="right",
+        ),
         Sg.FolderBrowse(),
     ],
     [Sg.HSep()],
     [
-        Sg.Text("Credential File"),
-        Sg.In(size=(25, 1), enable_events=True, key="-CRED-", default_text=Path(cred).absolute()),
+        Sg.Text("Credential File", size=(25, 1), justification="left"),
+        Sg.In(enable_events=True, key="-CRED-", default_text=Path(cred).absolute(), justification="right"),
         Sg.FileBrowse(),
     ],
     [Sg.HSep()],
     [
-        Sg.Text("Google Sheet name (without the year)"),
-        Sg.InputText(enable_events=True, key="-FILENAME-", default_text=filename),
+        Sg.Text("Google Sheet name\n(without the year)", size=(25, 2), justification="left"),
+        Sg.InputText(enable_events=True, key="-FILENAME-", default_text=filename, justification="right"),
     ],
     [Sg.HSep()],
     [Sg.Checkbox("Fetch", default=fetch, enable_events=True, key="-FETCH-")],
     [Sg.HSep()],
     [
-        Sg.Checkbox(month, key=f"-MONTH-{month}", enable_events=True, default=True if month in months else False)
+        Sg.Checkbox(
+            month, size=(5, 1), key=f"-MONTH-{month}", enable_events=True, default=True if month in months else False
+        )
         for month in all_months[:4]
     ],
     [
-        Sg.Checkbox(month, key=f"-MONTH-{month}", enable_events=True, default=True if month in months else False)
+        Sg.Checkbox(
+            month, size=(5, 1), key=f"-MONTH-{month}", enable_events=True, default=True if month in months else False
+        )
         for month in all_months[4:8]
     ],
     [
-        Sg.Checkbox(month, key=f"-MONTH-{month}", enable_events=True, default=True if month in months else False)
+        Sg.Checkbox(
+            month, size=(5, 1), key=f"-MONTH-{month}", enable_events=True, default=True if month in months else False
+        )
         for month in all_months[8:]
     ],
     [Sg.HSep()],
-    [Sg.Text("First year:"), Sg.InputText(enable_events=True, key="-FIRSTYEAR-", default_text=years[0])],
-    [Sg.Text("Last year:"), Sg.InputText(enable_events=True, key="-LASTYEAR-", default_text=years[-1])],
+    [
+        Sg.Text("First year:", size=(25, 1), justification="left"),
+        Sg.InputText(enable_events=True, key="-FIRSTYEAR-", default_text=years[0], justification="right"),
+    ],
+    [
+        Sg.Text("Last year:", size=(25, 1), justification="left"),
+        Sg.InputText(enable_events=True, key="-LASTYEAR-", default_text=years[-1], justification="right"),
+    ],
 ]
 
 layout = [[Sg.Column(line), Sg.VSep(), Sg.Column([[Sg.Button("RUN")], [Sg.Button("EXIT")]])]]
