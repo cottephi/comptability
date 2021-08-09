@@ -44,6 +44,8 @@ Watch out, it is a bit outdated and GCP web pages changed a bit.
 
 Create and download the json credentials, you will need to provide it later.
 
+Copy the account service email account, and from Google Drive, share the Google Sheet with this adress.
+
 ## Usage
 
 After having ran the install script, a new desktop should have appeared. Just click it to launch.
