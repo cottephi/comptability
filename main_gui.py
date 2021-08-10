@@ -62,6 +62,8 @@ while True:
         if int(first_year) > int(last_year):
             Sg.Popup(f"First year '{first_year}' can not be greater than last year '{last_year}'")
             continue
+        else:
+            years = [str(y) for y in list(range(int(first_year), int(last_year)+1))]
         if not output.is_dir():
             window_create_output = Sg.Window("Compta", make_layout_create_output(output))
             event2, value2 = window_create_output.read()

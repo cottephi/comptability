@@ -3,6 +3,8 @@ from pathlib import Path
 import PySimpleGUI as Sg
 import json
 
+Sg.theme('Dark Brown')
+
 previous_config = Path(__file__).parent / ".previous_configs.json"
 
 if not previous_config.is_file():
@@ -97,7 +99,7 @@ def make_layout_create_output(path):
 def make_progress_bar(value_max: int, name: str, text: str):
     return (
         [Sg.Text(text)],
-        [Sg.ProgressBar(max_value=value_max, orientation="h", key=name, bar_color=("red", "blue"), size=(20, 5))],
+        [Sg.ProgressBar(max_value=value_max, orientation="h", key=name, bar_color=("red", "black"), size=(15, 4))],
     )
 
 
