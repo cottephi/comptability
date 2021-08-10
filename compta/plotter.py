@@ -51,7 +51,8 @@ def graph_plotter(dataframe: pd.DataFrame, output: str):
 
     rows, cols = get_rows_cols(len(figs))
     final_fig = make_subplots(rows=rows, cols=cols, subplot_titles=list(figs.keys()),
-                              specs=[[{"type": "domain"}] * cols for _ in range(rows)])
+                              specs=[[{"type": "domain"}] * cols for _ in range(rows)],
+                              vertical_spacing=0.075, horizontal_spacing=0.075)
 
     for i, fig in enumerate(figs):
         row, col = get_row_col(i+1, cols)
