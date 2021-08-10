@@ -2,7 +2,6 @@
 from .logger import log as logger
 from .file_getter import get_excels
 import pandas as pd
-import numpy as np
 from pathlib import Path
 from typing import Optional, Union, List
 
@@ -23,6 +22,7 @@ def find_category(
     line: Optional[int] = None,
     column_start: Optional[int] = None,
     column_end: Optional[int] = None,
+    max_depth: Optional[int] = None,
 ) -> pd.DataFrame:
     global processed
 
@@ -91,6 +91,11 @@ def find_category(
                 # TODO : recompute total from cells below?
                 thedepth += 1
                 parents[f"category_{thedepth}"] = category
+                if max_depth is not None:
+                    for i in range(max_depth):
+                        thedepthforfuckingstupidplotly = i + 1
+                        parents[f"category_{thedepthforfuckingstupidplotly}"] = None
+
                 all_columns = list(set(list(dataframe.columns) + list(parents.keys())))
                 dataframe = dataframe.reindex(all_columns, axis=1)
                 newline = pd.Series(index=list(parents.keys()) + ["total"], data=list(parents.values()) + [item_below])
@@ -122,32 +127,45 @@ def read_excel(
         prgbar["read_years"].update(0)
         prgbar["read_months"].update(0)
 
+    logger.warning(f"Fetching max depth...")
+    for i, year in enumerate(excels):
+        if len(excels[year]) == 0:
+            logger.warning(f"Could not get year {year}")
+            continue
+        for j, month in enumerate(excels[year]):
+            categories.append(read_one_excel(excels[year][month], month, year))
+    categories = pd.concat(categories, ignore_index=True)
+    max_depth = len(categories.columns) - 2  # remove 1 for Years and 1 for Months
+
+    categories = []
     for i, year in enumerate(excels):
         if len(excels[year]) == 0:
             logger.warning(f"Could not get year {year}")
             continue
         logger.info(f"  Reading months for year {year}...")
         for j, month in enumerate(excels[year]):
-            categories.append(read_one_excel(excels[year][month], month, year))
+            categories.append(read_one_excel(excels[year][month], month, year, max_depth=max_depth))
             if prgbar is not None:
                 prgbar[f"read_months"].update(j + 1)
 
         if prgbar is not None:
             prgbar[f"read_years"].update(i + 1)
         logger.info(f"  ...months read for {year}")
+
     logger.info(f"...years read")
-    categories = pd.concat(categories, ignore_index=True).replace(np.nan, None)
+    categories = pd.concat(categories, ignore_index=True)
     filepath = (Path(output_dir) / filename).with_suffix(".csv")
+    # noinspection PyTypeChecker
     categories.to_csv(str(filepath))
     return categories
 
 
-def read_one_excel(excel: pd.DataFrame, month, year: str) -> pd.DataFrame:
+def read_one_excel(excel: pd.DataFrame, month, year: str, max_depth: Optional[int] = None) -> pd.DataFrame:
     logger.info(f"    Reading month {month}...")
     categories = pd.DataFrame(columns=["Year", "Month", "total"])
     for line in excel.index:
         categories = find_category(
-            excel=excel, parents={"Year": year, "Month": month}, dataframe=categories, line=line, column_start=None,
+            excel=excel, parents={"Year": year, "Month": month}, dataframe=categories, line=line, column_start=None, max_depth=max_depth
         )
     cat_columns = [c for c in categories.columns if "category" in c]
     cat_columns.sort()
@@ -155,3 +173,4 @@ def read_one_excel(excel: pd.DataFrame, month, year: str) -> pd.DataFrame:
     logger.info(f"    ...read month {month}")
     clean()
     return categories
+
