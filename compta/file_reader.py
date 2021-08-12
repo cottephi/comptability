@@ -156,7 +156,7 @@ def read_excel(
                 prgbar[f"read_months"].update(j + 1)
 
         if prgbar is not None:
-            prgbar[f"read_years"].update(i + 1)
+            prgbar["read_years"].update(i + 1)
         logger.info(f"  ...months read for {year}")
 
     logger.info(f"...years read")
@@ -180,4 +180,3 @@ def read_one_excel(excel: pd.DataFrame, month, year: str) -> pd.DataFrame:  # ma
     logger.info(f"    ...read month {month}")
     clean()
     return categories
-

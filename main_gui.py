@@ -3,24 +3,20 @@ import json
 import PySimpleGUI as Sg
 from pathlib import Path
 from compta.file_reader import read_excel
-from compta.plotter import graph_plotter
+from compta.plotter import graph_plotter, openfile
 from gui.layouts import (
     layout,
     make_layout_create_output,
-    filename,
-    cred,
-    output,
-    months,
-    fetch,
-    years,
+    configs,
     progress_layout,
-    previous_config
+    previous_config,
 )
 
+current_location = configs["output"]
 
 window = Sg.Window("Compta", layout)
-first_year = years[0]
-last_year = years[-1]
+first_year = configs["years"][0]
+last_year = configs["years"][-1]
 
 # Run the Event Loop
 while True:
@@ -30,17 +26,21 @@ while True:
         break
 
     if event == "-OUTPUT-":
-        output = values[event]
+        configs["output"] = Path(values[event])
     elif event == "-CRED-":
-        cred = values[event]
+        configs["cred"] = Path(values[event])
     elif event == "-FILENAME-":
-        filename = values[event]
+        configs["filename"] = values[event]
     elif "-MONTH-" in event:
         month = event.replace("-MONTH-", "")
-        if month in months:
-            months.remove(month)
+        if month in configs["months"]:
+            configs["months"].remove(month)
         else:
-            months.append(month)
+            configs["months"].append(month)
+    elif "-NAMES-" in event:
+        configs["names"] = values[event].replace(" ", "").split(",")
+    elif "-COMMON-" in event:
+        configs["common"] = values[event]
     elif "YEAR-" in event:
         try:
             int(values[event])
@@ -52,51 +52,71 @@ while True:
             Sg.Popup(f"Invalide year '{values['-FIRSTYEAR-']}'")
             continue
     elif event == "-FETCH-":
-        fetch = bool(values["-FETCH-"])
+        configs["fetch"] = bool(values["-FETCH-"])
+    elif event == "-PLOTS-":
+        pressed_path = current_location / values[event][0]
+        if pressed_path.is_dir():
+            current_location = pressed_path
+            newcontent = [p.name for p in current_location.glob("*")]
+            if current_location.stat() != configs["output"].stat():
+                newcontent = [".."] + newcontent
+            window["-PLOTS-"].update(newcontent)
+        else:
+            openfile(pressed_path)
+
     elif event == "RUN":
-        if len(months) == 0:
+        if len("months") == 0:
             Sg.Popup("You must select at least one month!")
             continue
-        cred = Path(cred)
-        output = Path(output)
         if int(first_year) > int(last_year):
             Sg.Popup(f"First year '{first_year}' can not be greater than last year '{last_year}'")
             continue
         else:
-            years = [str(y) for y in list(range(int(first_year), int(last_year)+1))]
-        if not output.is_dir():
-            window_create_output = Sg.Window("Compta", make_layout_create_output(output))
+            configs["years"] = [str(y) for y in list(range(int(first_year), int(last_year)+1))]
+        if not configs["output"].is_dir():
+            window_create_output = Sg.Window("Compta", make_layout_create_output(configs["output"]))
             event2, value2 = window_create_output.read()
             if event2 == "YES":
-                output.mkdir(parents=True)
+                configs["output"].mkdir(parents=True)
             window_create_output.close()
-        if output.is_dir():
-            window_layout = Sg.Window("Progressions", [[progress_layout(len(years), len(months))]], finalize=True)
+        if configs["output"].is_dir():
+            window_layout = Sg.Window("Progressions", [[progress_layout(len(configs["years"]), len(configs["months"]))]], finalize=True)
             graph_plotter(
                 dataframe=read_excel(
-                    filename=filename,
-                    fetch=fetch,
-                    output_dir=output,
-                    cred=cred,
-                    months=months,
-                    years=years,
+                    filename=configs["filename"],
+                    fetch=configs["fetch"],
+                    output_dir=configs["output"],
+                    cred=configs["cred"],
+                    months=configs["months"],
+                    years=configs["years"],
                     prgbar=window_layout,
                 ),
-                output=str(Path(output) / f"{filename}.html"),
+                output=configs["output"] / f"{configs['filename']}.html",
+                names=configs["names"],
+                common=configs["common"]
             )
             window_layout.close()
+
+            if Path(configs["output"]).is_dir():
+                newcontent = [p.name for p in current_location.glob("*")]
+                if current_location.stat() != configs["output"].stat():
+                    newcontent = [".."] + newcontent
+                window["-PLOTS-"].update(newcontent)
+
     elif event == "EXIT":
         break
 
 window.close()
 
 prev = {
-    "fetch": fetch,
-    "filename": filename,
-    "output": str(Path(output).absolute()),
-    "years": [first_year, last_year],
-    "cred": str(Path(cred).absolute()),
-    "months": months
+    "fetch": configs["fetch"],
+    "filename": configs["filename"],
+    "output": str(configs["output"].absolute()),
+    "years": configs["years"],
+    "cred": str(configs["cred"].absolute()),
+    "months": configs["months"],
+    "names": configs["names"],
+    "common": configs["common"]
 }
 
 with open(str(previous_config), "w") as f:

@@ -46,6 +46,20 @@ if __name__ == "__main__":
         default="2021",
         help="Years to analyse. Default to 2021. Format must be 'Janvier,Fevrier,...'",
     )
+    parser.add_argument(
+        "-p",
+        "--payers",
+        type=str,
+        default="Mop,Philippe",
+        help="Names of people involved",
+    )
+    parser.add_argument(
+        "-k",
+        "--common",
+        type=str,
+        default="Commun",
+        help="String for buys made in common",
+    )
     args = parser.parse_args()
 
     fetch = args.fetch
@@ -53,14 +67,17 @@ if __name__ == "__main__":
     cred = Path(args.credentials)
     output = Path(args.output)
     months = args.months
-    years = args.years
+    years = args.years.replace(" ", "").split(",")
+    names = args.payers.replace(" ", "").split(",")
+    common = args.common
     if months is not None:
         months = months.replace(" ", "").split(",")
-    years = years.replace(" ", "").split(",")
     graph_plotter(
         dataframe=read_excel(
             filename=filename, fetch=fetch, output_dir=output, cred=cred, months=months, years=years, prgbar=None
         ),
-        output=str(Path(output) / f"{filename}.html"),
+        output=Path(output) / f"{filename}.html",
+        names=names,
+        common=common
     )
     logger.info("\nProgram ended sucessfully")
